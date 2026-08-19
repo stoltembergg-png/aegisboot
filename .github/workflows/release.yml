@@ -52,22 +52,20 @@ jobs:
         run: |
           ./scripts/verify-distro.sh
 
+      - name: Install syft for SBOM generation
+        run: |
+          # Download syft installer to file first (security: no pipe to shell)
+          curl -sSfL -o /tmp/syft-install.sh https://raw.githubusercontent.com/anchore/syft/main/install.sh
+          sh /tmp/syft-install.sh -b /usr/local/bin
+
       - name: Generate CycloneDX SBOM
         run: |
-          cat << 'EOF' > Binaries/OpenCorePkg-cyclonedx.json
-          {
-            "bomFormat": "CycloneDX",
-            "specVersion": "1.5",
-            "version": 1,
-            "metadata": {
-              "component": {
-                "name": "AegisBoot",
-                "type": "application",
-                "description": "Continuous Integration Downstream Distribution of OpenCorePkg"
-              }
-            }
-          }
-          EOF
+          # Generate SBOM from built artifacts
+          syft packages dir:Binaries -o cyclonedx-json > Binaries/OpenCorePkg-cyclonedx.json
+
+      - name: Validate CycloneDX SBOM
+        run: |
+          python3 scripts/validate_sbom.py --sbom Binaries/OpenCorePkg-cyclonedx.json
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e8ad94076da634d94 # v2.0.4
