@@ -59,11 +59,15 @@ jobs:
       - run: ./build_duet.tool
       - run: ./build_oc.tool
 
+      - name: Generate Build Manifest
+        run: |
+          python3 scripts/generate-build-manifest.py --artifacts-dir Binaries --output Binaries/build-manifest.json --target RELEASE --arch X64 --toolchain XCODE5
+
       - name: Upload to Artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: macOS XCODE5 Artifacts
-          path: Binaries/*.zip
+          path: Binaries/*
           retention-days: 14
 
       - name: Upload to Release
@@ -97,11 +101,15 @@ jobs:
       - name: Build OpenCore
         run: docker compose run --rm build-oc
 
+      - name: Generate Build Manifest
+        run: |
+          python3 scripts/generate-build-manifest.py --artifacts-dir Binaries --output Binaries/build-manifest.json --target RELEASE --arch X64 --toolchain CLANGPDB
+
       - name: Upload to Artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: Linux CLANGPDB Artifacts
-          path: Binaries/*.zip
+          path: Binaries/*
           retention-days: 14
 
   build-linux-gcc5:
@@ -126,11 +134,15 @@ jobs:
       - name: Build OpenCore
         run: docker compose run --rm build-oc
 
+      - name: Generate Build Manifest
+        run: |
+          python3 scripts/generate-build-manifest.py --artifacts-dir Binaries --output Binaries/build-manifest.json --target RELEASE --arch X64 --toolchain GCC
+
       - name: Upload to Artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: Linux GCC Artifacts
-          path: Binaries/*.zip
+          path: Binaries/*
           retention-days: 14
 
   build-linux-clangdwarf:
@@ -155,11 +167,15 @@ jobs:
       - name: Build OpenCore
         run: docker compose run --rm build-oc
 
+      - name: Generate Build Manifest
+        run: |
+          python3 scripts/generate-build-manifest.py --artifacts-dir Binaries --output Binaries/build-manifest.json --target RELEASE --arch X64 --toolchain CLANGDWARF
+
       - name: Upload to Artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: Linux CLANGDWARF Artifacts
-          path: Binaries/*.zip
+          path: Binaries/*
           retention-days: 14
 
   build-linux-docs:
@@ -211,9 +227,39 @@ jobs:
       - run: ./build_duet.tool
       - run: ./build_oc.tool
 
+      - name: Generate Build Manifest
+        run: |
+          python3 scripts/generate-build-manifest.py --artifacts-dir Binaries --output Binaries/build-manifest.json --target RELEASE --arch X64 --toolchain VS2022
+
       - name: Upload to Artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: Windows Artifacts
-          path: Binaries/*.zip
+          path: Binaries/*
+          retention-days: 14
+
+  build-drift-detection:
+    name: Build Drift & Reproducibility Detection
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Execute Dual-Pass Build Comparison
+        run: |
+          FAST_DRIFT_CHECK=1 ./scripts/check-build-drift.sh
+
+      - name: Upload Drift Report
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: Build Drift Report
+          path: build-drift-report.json
           retention-days: 14

@@ -39,6 +39,15 @@ out.bin
 prelinkedkernel.unpack
 .gdb_history
 *.dmg
+*.python-version
+.venv
+*.diff
+
+# AegisBoot build artifacts
+distro-build-*/
+*-manifest.json
+*-report.json
+distro-version.json
 *.chunklist
 *.pyc
 *.id0
