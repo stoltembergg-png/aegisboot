@@ -27,10 +27,8 @@ jobs:
 
       - name: Check for New Upstream Commits
         id: check_upstream
-        env:
-          UPSTREAM_URL: https://github.com/acidanthera/OpenCorePkg.git
         run: |
-          git remote add upstream "$UPSTREAM_URL" 2>/dev/null || git remote set-url upstream "$UPSTREAM_URL"
+          # Use existing upstream remote (configured in repo)
           git fetch upstream master --tags --quiet
 
           LOCAL_SHA=$(git rev-parse HEAD)
@@ -82,8 +80,8 @@ jobs:
           EOF
           )
 
-          # Push branch using authenticated remote
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$SYNC_BRANCH" --force
+          # Push branch to fork remote (our fork, not upstream)
+          git push fork "$SYNC_BRANCH" --force
 
           # Create PR if not already open
           if ! gh pr list --head "$SYNC_BRANCH" --json number | grep -q 'number'; then

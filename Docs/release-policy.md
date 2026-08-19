@@ -1,73 +1,140 @@
-# AegisBoot — Release Policy
+# Release Policy
+
+> **Policy Version:** 1.0.0
+> **Status:** Active
+> **Last Updated:** 2026-08-19
 
 ---
 
-## 1. Release Channels & Cadence
+## 1. Release Philosophy
 
-AegisBoot provides three distinct release channels to balance immediate upstream sync tracking with production stability:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    AEGISBOOT RELEASE CHANNELS               │
-└─────────────────────────────────────────────────────────────┘
-  │
-  ├── 1. EDGE / NIGHTLY
-  │   - Frequency: On every upstream commit integrated into main.
-  │   - Target: Automated CI testing, hardware lab validation, early adopters.
-  │   - Stability: Bleeding edge (all CI gates passed).
-  │
-  ├── 2. STAGING / CANARY
-  │   - Frequency: Weekly rollups or upon major upstream PR integration.
-  │   - Target: Extended compatibility testing, multi-system smoke tests.
-  │   - Stability: High confidence.
-  │
-  └── 3. STABLE / TAGGED
-      - Frequency: Monthly or synchronized with official upstream OpenCore releases.
-      - Target: Production boot environments.
-      - Stability: Maximum stability with full SBOM, SLSA provenance, and signed digests.
-```
+AegisBoot releases are **downstream continuous distributions** that track upstream OpenCorePkg commits. Every release is fully traceable to an upstream SHA and passes 100% of CI validation gates.
 
 ---
 
-## 2. Versioning Scheme
+## 2. Release Triggers
 
-AegisBoot employs a Semantic Versioning 2.0.0 scheme with explicit upstream traceability metadata:
+A downstream release is created when:
+
+1. **Upstream Sync Merge:** A `sync:upstream` PR passes all CI gates and merges to `main`
+2. **Impact Classification:** The merged sync PR is labeled with `impact:patch`, `impact:minor`, `impact:major`, or `impact:critical`
+3. **Gate Completion:** All validation gates pass (build, static analysis, QEMU boot test, patch verification, security scans)
+
+**No release is created for:**
+- `impact:none` (documentation only)
+- `impact:infrastructure` (CI/CD/tooling only)
+
+---
+
+## 3. Versioning Scheme
+
+All AegisBoot releases follow this SemVer-extended format:
 
 ```
-v<UPSTREAM_VERSION>-aegis.<DISTRO_REVISION>+<UPSTREAM_COMMIT_SHA>
+v<upstream_version>-aegis.<distro_revision>+<upstream_sha_short>
 ```
 
-- `UPSTREAM_VERSION`: Canonical OpenCore version (e.g. `1.0.8`) parsed from `Include/Acidanthera/Library/OcMainLib.h`.
-- `DISTRO_REVISION`: Integer incremented for downstream packaging, CI, or toolchain updates applied against the same upstream version.
-- `UPSTREAM_COMMIT_SHA`: 7-character short SHA of the upstream commit on which this build is based.
+| Component | Source | Example |
+|---|---|---|
+| `v<upstream_version>` | Extracted from `OcMainLib.h` (`OPEN_CORE_VERSION`) | `v1.0.8` |
+| `aegis.<distro_revision>` | Incremented per downstream release for same upstream version | `aegis.1`, `aegis.2` |
+| `<upstream_sha_short>` | First 7 chars of upstream commit SHA | `170b538` |
 
 **Examples:**
-- `v1.0.8-aegis.1+170b538`
-- `v1.0.8-aegis.2+558a2fd`
-- `v1.0.9-aegis.1+a1b2c3d`
+- `v1.0.8-aegis.1+170b538` — First downstream release of OpenCore 1.0.8
+- `v1.0.8-aegis.2+170b538` — Second downstream release (same upstream, new CI fix)
+- `v1.0.9-aegis.1+abc1234` — First downstream release of OpenCore 1.0.9
 
 ---
 
-## 3. Release Artifacts & Supply-Chain Metadata
+## 4. Release Channels
 
-Every official AegisBoot release produces a standard set of cryptographic artifacts:
+| Channel | Tag Pattern | Stability | Use Case |
+|---|---|---|---|
+| `edge` | `v*-aegis.*-edge` | Nightly / Experimental | Developers, CI testing |
+| `staging` | `v*-aegis.*-staging` | Pre-release / Canary | Early adopters, validation |
+| `stable` | `v*-aegis.*` | Production | General distribution |
 
-| Artifact | Format | Description |
+---
+
+## 5. Release Artifacts
+
+Every stable release **must** include:
+
+| Artifact | Format | Purpose |
 |---|---|---|
-| `AegisBoot-<ver>-RELEASE.zip` | ZIP | Production OpenCore EFI binaries with optimizations and disabled debug logs. |
-| `AegisBoot-<ver>-DEBUG.zip` | ZIP | Diagnostics OpenCore EFI binaries with full serial and screen logging. |
-| `AegisBoot-<ver>-NOOPT.zip` | ZIP | Unoptimized OpenCore EFI binaries for deep kernel/UEFI debugging. |
-| `distro-version.json` | JSON | Machine-readable version metadata, commit SHAs, build timestamps, and toolchain pins. |
-| `OpenCorePkg-<ver>-cyclonedx.json`| JSON | CycloneDX Software Bill of Materials (SBOM) listing all components. |
-| `provenance.json` | JSON | SLSA Level 3 Provenance statement linking build to source repository commit. |
-| `SHA256SUMS.txt` | Text | SHA-256 digests of all release ZIP archives. |
-| `SHA512SUMS.txt` | Text | SHA-512 digests of all release ZIP archives. |
+| `OpenCore-<version>-RELEASE.zip` | Binary ZIP | Production binaries (RELEASE target) |
+| `OpenCore-<version>-DEBUG.zip` | Binary ZIP | Debug binaries (DEBUG target) |
+| `OpenCore-<version>-NOOPT.zip` | Binary ZIP | No-optimization binaries |
+| `distro-version.json` | JSON | Machine-readable version metadata |
+| `SHA256SUMS.txt` | Text | SHA-256 checksums |
+| `SHA512SUMS.txt` | Text | SHA-512 checksums |
+| `OpenCorePkg-cyclonedx.json` | JSON | CycloneDX 1.5 SBOM |
+| `provenance.json` | JSON | SLSA Level 3 provenance (when available) |
 
 ---
 
-## 4. Rollback and Deprecation Procedure
+## 6. Release Process
 
-If a critical defect or boot failure is identified in a published release:
-1. **Deprecation Notice:** The GitHub Release is immediately updated with a prominent `[CRITICAL WARNING / YANKED]` disclaimer in the title and release body.
-2. **Rollback Release:** An emergency point release based on the previous known-good commit is cut within < 15 minutes.
-3. **Artifact Retention:** Defective binaries are retained for post-mortem forensic analysis but flagged as untrusted.
+### Automated (Standard)
+
+1. Sync PR merges with qualifying impact label
+2. CI pipeline runs full validation matrix
+3. Tag is pushed: `v<upstream_version>-aegis.<N>+<sha>`
+4. `.github/workflows/release.yml` triggers on tag
+5. Build, package, verify, SBOM, provenance
+6. GitHub Release published automatically
+
+### Manual (Emergency / Hotfix)
+
+```bash
+# From main branch at desired commit
+git tag v1.0.8-aegis.3+170b538
+git push origin v1.0.8-aegis.3+170b538
+```
+
+---
+
+## 7. Rollback / Yank Policy
+
+If a release is found to have critical defects:
+
+1. **Yank:** Mark release as "Pre-release" and add `[YANKED]` to title
+2. **Redeploy:** Push a new downstream revision (e.g., `v1.0.8-aegis.4+170b538`) with fix
+3. **Document:** Add incident note to CHANGELOG_DISTRO.md
+
+---
+
+## 8. Release Notes
+
+Release notes are auto-generated from:
+- Upstream commit log since last downstream release
+- Local CI/CD changes (from `CHANGELOG_DISTRO.md`)
+- Patch stack changes
+- Impact classification labels
+
+Maintainers may edit before publishing.
+
+---
+
+## 9. Cryptographic Signing (Future)
+
+When implemented:
+- Releases signed with maintainer GPG key
+- Signatures published alongside artifacts
+- Verification instructions in release description
+
+---
+
+## 10. Compliance Checklist
+
+Before any release is published:
+
+- [ ] All CI gates green (100%)
+- [ ] Upstream SHA recorded in `distro-version.json`
+- [ ] Patch stack verified clean
+- [ ] SHA256/SHA512 checksums generated
+- [ ] CycloneDX SBOM generated
+- [ ] Version tag follows exact format
+- [ ] CHANGELOG_DISTRO.md updated
+- [ ] Release channel label applied
