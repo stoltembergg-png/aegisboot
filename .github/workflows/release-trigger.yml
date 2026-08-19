@@ -1,0 +1,110 @@
+name: Release Trigger
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release-trigger-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  trigger-release:
+    name: Trigger Release for Merged Sync PR
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'sync:upstream')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Extract Impact Label
+        id: impact
+        run: |
+          # Find impact label from PR
+          LABELS='${{ toJson(github.event.pull_request.labels) }}'
+          IMPACT=$(echo "$LABELS" | jq -r '.[] | select(.name | startswith("impact:")) | .name | split(":")[1]')
+          if [ -z "$IMPACT" ] || [ "$IMPACT" = "null" ]; then
+            IMPACT="patch"
+          fi
+          echo "impact=$IMPACT" >> "$GITHUB_OUTPUT"
+          echo "Detected impact: $IMPACT"
+
+      - name: Determine Release Action
+        id: release_action
+        run: |
+          IMPACT="${{ steps.impact.outputs.impact }}"
+          case "$IMPACT" in
+            none|infrastructure)
+              echo "action=skip" >> "$GITHUB_OUTPUT"
+              echo "reason=Impact '$IMPACT' does not warrant a release" >> "$GITHUB_OUTPUT"
+              ;;
+            patch|minor|major|critical)
+              echo "action=release" >> "$GITHUB_OUTPUT"
+              echo "reason=Impact '$IMPACT' warrants a release" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "action=skip" >> "$GITHUB_OUTPUT"
+              echo "reason=Unknown impact '$IMPACT'" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: Generate Release Tag
+        if: steps.release_action.outputs.action == 'release'
+        id: tag
+        run: |
+          # Get upstream version from OpenCore
+          UPSTREAM_VERSION=$(grep -oP '#define\s+OPEN_CORE_VERSION\s+"\K[^"]+' Include/Acidanthera/Library/OcMainLib.h 2>/dev/null || echo "1.0.8")
+          
+          # Get current fork HEAD (post-merge)
+          FORK_SHA=$(git rev-parse HEAD)
+          FORK_SHORT=$(git rev-parse --short HEAD)
+          
+          # Determine next revision number by checking existing tags
+          EXISTING_TAGS=$(git tag -l "v${UPSTREAM_VERSION}-aegis.*" | sort -V)
+          if [ -z "$EXISTING_TAGS" ]; then
+            REV=1
+          else
+            LAST_TAG=$(echo "$EXISTING_TAGS" | tail -1)
+            LAST_REV=$(echo "$LAST_TAG" | sed -E 's/.*-aegis\.([0-9]+)\+.*/\1/')
+            REV=$((LAST_REV + 1))
+          fi
+          
+          TAG="v${UPSTREAM_VERSION}-aegis.${REV}+${FORK_SHORT}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "upstream_version=$UPSTREAM_VERSION" >> "$GITHUB_OUTPUT"
+          echo "revision=$REV" >> "$GITHUB_OUTPUT"
+          echo "fork_sha_short=$FORK_SHORT" >> "$GITHUB_OUTPUT"
+          echo "Generated release tag: $TAG"
+
+      - name: Create and Push Release Tag
+        if: steps.release_action.outputs.action == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          git tag "$TAG"
+          git push fork "$TAG"
+          echo "Pushed release tag: $TAG"
+
+      - name: Trigger Release Workflow
+        if: steps.release_action.outputs.action == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          # The release workflow triggers on tag push (v*), so it will run automatically
+          echo "Release workflow will trigger automatically for tag: $TAG"
+
+      - name: Log Skip Reason
+        if: steps.release_action.outputs.action == 'skip'
+        run: |
+          echo "Skipping release: ${{ steps.release_action.outputs.reason }}"
