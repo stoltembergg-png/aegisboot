@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "toolchain_version": "1.0.0",
+  "description": "Pinned toolchain versions and hashes for reproducible AegisBoot builds",
+  "base_dependencies": {
+    "edk2_release": "edk2-stable202511",
+    "ocbuild_repo": "https://github.com/acidanthera/ocbuild.git",
+    "ocbuild_commit": "master"
+  },
+  "compilers": {
+    "llvm_clang": {
+      "version": "21.0.0",
+      "target_triplets": ["x86_64-pc-win32-coff", "i686-pc-win32-coff", "aarch64-linux-gnu"]
+    },
+    "gcc": {
+      "version": "13.2.0",
+      "packages": ["gcc-multilib", "gcc-x86-64-linux-gnu", "i686-w64-mingw32-gcc"]
+    },
+    "xcode": {
+      "min_version": "15.0",
+      "recommended": "16.0"
+    }
+  },
+  "assemblers_and_compilers": {
+    "nasm": {
+      "version": "2.16.03",
+      "sha256": "55c4794eab3d82a17cb6eecdd18f8da0fa7270e5b72186835a09ee4f23b2c286"
+    },
+    "iasl": {
+      "version": "20240827",
+      "sha256": "4b68ff5e13d9cf8b1a8d05cf4e8a4a35ec11b5e3240e87b7a1496a79e4ea095c"
+    }
+  },
+  "runtime_and_linters": {
+    "python": ">=3.10",
+    "uncrustify": "0.72.0",
+    "shellcheck": "0.10.0",
+    "prospector": "1.10.3",
+    "qemu": ">=8.2.0",
+    "ovmf": "2024.02"
+  },
+  "actions_pins": {
+    "actions/checkout": "b4ffde65f46336ab88eb53be808477a3936bae11",
+    "actions/upload-artifact": "65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08",
+    "actions/download-artifact": "fa0a91b85d4f404e444e00e005971372dc801d16",
+    "actions/setup-python": "0a5c61591373683505ea898e09a3ea4f39ef2b9c",
+    "github/codeql-action": "48ab28a6f5dab2a823e7e690421c822b0f86386b"
+  }
+}

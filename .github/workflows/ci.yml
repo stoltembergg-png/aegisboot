@@ -1,0 +1,216 @@
+name: CI Validation Gates
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  workflow-integrity:
+    name: Workflow & Security Integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Run Workflow Security Validator
+        run: python scripts/validate_workflows.py --strict
+
+      - name: Run Workflow Hardening Tests
+        run: |
+          python -m unittest tests/test_workflow_integrity.py
+          python -m unittest tests/test_validator_unit.py
+
+  formatting:
+    name: Code & Script Formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Verify Python Script Syntax
+        run: python -m py_compile scripts/*.py tests/*.py
+
+      - name: Check Shell Script Syntax
+        run: |
+          for script in scripts/*.sh; do
+            [ -f "$script" ] || continue
+            bash -n "$script"
+          done
+
+  static-checks:
+    name: Static Analysis & Schema Audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on Automation Scripts
+        run: |
+          for script in scripts/*.sh; do
+            [ -f "$script" ] || continue
+            shellcheck -x "$script"
+          done
+
+      - name: Validate Sample Plist XML Syntax
+        run: |
+          python3 -c "import plistlib; plistlib.load(open('Docs/Sample.plist', 'rb'))"
+          python3 -c "import plistlib; plistlib.load(open('Docs/SampleCustom.plist', 'rb'))"
+
+  license-and-secrets:
+    name: License Audit & Secret Scanning
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Scan for Exposed Tokens / Secret Patterns
+        run: |
+          # Assert no private keys or tokens in repository files
+          if grep -rnEI --exclude-dir=".git" "(ghp_[A-Za-z0-9]{36}|BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY)" . ; then
+            echo "[ERROR] Suspected secret pattern detected in codebase!"
+            exit 1
+          fi
+          echo "[OK] No secrets detected."
+
+      - name: Verify License Files
+        run: |
+          [ -f "LICENSE.txt" ] || (echo "LICENSE.txt missing!" && exit 1)
+          echo "[OK] Core license file verified."
+
+  dependency-and-toolchain:
+    name: Dependency & Toolchain Audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Toolchain Pins JSON Schema
+        run: |
+          python3 -c "import json; data = json.load(open('toolchains/toolchain-pins.json')); assert 'toolchain_version' in data"
+
+  patch-stack-verification:
+    name: Patch Stack Verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Check Patch Clean Applicability
+        run: ./scripts/apply-patches.sh --check
+
+  policy-and-metadata-tests:
+    name: Policy & Version Metadata Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Run Policy and Metadata Test Suites
+        run: |
+          python -m unittest tests/test_distribution_policies.py
+          python -m unittest tests/test_version_metadata.py
+          python -m unittest tests/test_patch_stack.py
+
+  unit-and-integration-tests:
+    name: Utilities Unit & Integration Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Install Build Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential nasm iasl uuid-dev libssl-dev gcc-multilib
+
+      - name: Run ACPIe Testsuite
+        run: |
+          if [ -f "Utilities/ACPIe/testsuite.sh" ]; then
+            cd Utilities/ACPIe && ./testsuite.sh
+          fi
+
+      - name: Run Kext Injection Integration Checks
+        run: |
+          if [ -f "Utilities/TestKextInject/check_injection.sh" ]; then
+            cd Utilities/TestKextInject && ./check_injection.sh
+          fi
+
+  qemu-boot-test:
+    name: QEMU / OVMF Boot Regression Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Install QEMU and OVMF
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 ovmf
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Run QEMU OVMF Simulation Test
+        run: python tests/test_qemu_boot.py

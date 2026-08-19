@@ -1,0 +1,31 @@
+name: Upstream Sync / Conflict Issue
+description: Report an issue with upstream synchronization or breaking changes from acidanthera/OpenCorePkg.
+title: "[SYNC]: "
+labels: ["sync:conflict", "type:upstream-tracking"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when an upstream commit causes a build break, merge conflict, or patch failure in AegisBoot.
+
+  - type: input
+    id: upstream_sha
+    attributes:
+      label: Upstream Commit SHA / URL
+      placeholder: https://github.com/acidanthera/OpenCorePkg/commit/170b538b7e28b8cf44eb896b7978f8bc01d12345
+    validations:
+      required: true
+
+  - type: textarea
+    id: conflict_details
+    attributes:
+      label: Conflict / Failure Details
+      description: Explain the failure mode (e.g. build failure in Clang, patch reject in Patches/, config schema mismatch).
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_resolution
+    attributes:
+      label: Proposed Resolution
+      description: How should this conflict be resolved without diverging from upstream semantics?

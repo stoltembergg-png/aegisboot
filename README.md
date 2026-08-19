@@ -3,6 +3,18 @@
 [![Build Status](https://github.com/acidanthera/OpenCorePkg/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/acidanthera/OpenCorePkg/actions) [![Scan Status](https://scan.coverity.com/projects/18169/badge.svg?flat=1)](https://scan.coverity.com/projects/18169)
 -----
 
+> [!NOTE]
+> **AegisBoot — Downstream Continuous Distribution of OpenCorePkg**
+> This repository is an automated, continuously integrated downstream distribution tracking [`acidanthera/OpenCorePkg`](https://github.com/acidanthera/OpenCorePkg).
+> **Disclaimer:** AegisBoot is an independent community distribution and is **not** an official release of Acidanthera.
+> 
+> 📖 **Distribution Guides & Policies:**
+> - [Distribution Charter](DISTRIBUTION.md) | [Branding & Trademark Policy](BRANDING.md)
+> - [Contributing Guide](CONTRIBUTING.md) | [Security Policy](SECURITY.md) | [Governance](GOVERNANCE.md)
+> - [Release Policy](docs/release-policy.md) | [Upstream Sync Policy](docs/upstream-sync-policy.md) | [Local Patch Policy](docs/local-patch-policy.md)
+> - [Compatibility Policy](docs/compatibility-policy.md) | [Build Instructions](docs/build-instructions.md) | [Troubleshooting](docs/troubleshooting.md)
+> - [Downstream Changelog](CHANGELOG_DISTRO.md) | [Toolchain Pins](toolchains/toolchain-pins.json)
+
 OpenCore bootloader with development SDK.
 
 ## Libraries

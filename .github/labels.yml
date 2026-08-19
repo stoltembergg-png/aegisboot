@@ -1,0 +1,115 @@
+- name: "sync:upstream"
+  color: "0E8A16"
+  description: "Automated PR synchronizing upstream OpenCorePkg commits"
+
+- name: "sync:conflict"
+  color: "B60205"
+  description: "Upstream synchronization encountered merge or patch conflicts"
+
+- name: "sync:auto-merged"
+  color: "5319E7"
+  description: "Automatically merged after satisfying all CI validation gates"
+
+- name: "sync:blocked"
+  color: "D93F0B"
+  description: "Sync is blocked due to broken gate or manual hold"
+
+- name: "impact:none"
+  color: "EDEDED"
+  description: "Documentation or minor comment changes (no release needed)"
+
+- name: "impact:patch"
+  color: "FBCA04"
+  description: "Bug fixes or small enhancements (triggers patch release)"
+
+- name: "impact:minor"
+  color: "0052CC"
+  description: "New features or significant enhancements (triggers minor release)"
+
+- name: "impact:major"
+  color: "B60205"
+  description: "Breaking changes or major architecture shifts"
+
+- name: "impact:critical"
+  color: "B60205"
+  description: "Security vulnerability fix or emergency boot regression"
+
+- name: "impact:infrastructure"
+  color: "C2E0C6"
+  description: "CI/CD, Docker, or toolchain changes (no binary release)"
+
+- name: "area:ci"
+  color: "1D76DB"
+  description: "GitHub Actions workflows and continuous integration"
+
+- name: "area:scripts"
+  color: "BFD4F2"
+  description: "Automation, sync, and packaging scripts"
+
+- name: "area:docs"
+  color: "0075CA"
+  description: "Governance, policies, and technical documentation"
+
+- name: "area:toolchain"
+  color: "D4C5F9"
+  description: "Compilers, assemblers, and Docker environments"
+
+- name: "area:patches"
+  color: "F9D0C4"
+  description: "Local patch stack in Patches/"
+
+- name: "area:qemu"
+  color: "E99695"
+  description: "QEMU/OVMF boot regression testing"
+
+- name: "area:release"
+  color: "0E8A16"
+  description: "Release packaging, SBOM, and provenance generation"
+
+- name: "type:bug"
+  color: "D73A4A"
+  description: "Something isn't working as intended"
+
+- name: "type:feature"
+  color: "A2EEEF"
+  description: "New feature or automation capability"
+
+- name: "type:security"
+  color: "EE0701"
+  description: "Security vulnerability or hardening enforcement"
+
+- name: "type:maintenance"
+  color: "7057FF"
+  description: "Routine repository upkeep or dependency updates"
+
+- name: "type:upstream-tracking"
+  color: "006B75"
+  description: "Issues or PRs tracking upstream Acidanthera discussions"
+
+- name: "status:gate-failed"
+  color: "E11D21"
+  description: "One or more CI/CD validation gates failed"
+
+- name: "status:ready-to-merge"
+  color: "0E8A16"
+  description: "All validation gates passed and PR is approved"
+
+- name: "status:needs-rebase"
+  color: "FBCA04"
+  description: "Branch needs rebase onto latest main"
+
+- name: "status:needs-manual-review"
+  color: "D93F0B"
+  description: "Requires manual inspection by Lead Maintainer"
+
+- name: "channel:edge"
+  color: "C5DEF5"
+  description: "Edge/Nightly release channel"
+
+- name: "channel:staging"
+  color: "BFDADC"
+  description: "Canary/Staging release channel"
+
+- name: "channel:stable"
+  color: "0E8A16"
+  description: "Production Stable release channel"

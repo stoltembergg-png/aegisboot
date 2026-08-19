@@ -1,0 +1,83 @@
+name: Distribution Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.8-aegis.1)'
+        required: true
+        default: 'v1.0.8-aegis.1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build, Package & Publish Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Apply Docker AppArmor settings
+        run: |
+          src=$(/usr/bin/curl -LfsS https://raw.githubusercontent.com/acidanthera/ocbuild/master/docker-apparmor.sh) && eval "$src" || exit 1
+
+      - name: Build OpenDuet & OpenCore Binaries
+        run: |
+          docker compose run --rm build-duet
+          docker compose run --rm build-oc
+
+      - name: Generate Version Metadata & Provenance Manifest
+        run: |
+          python3 scripts/generate-version-metadata.py --output Binaries/distro-version.json
+
+      - name: Generate Checksums (SHA256 & SHA512)
+        run: |
+          ./scripts/verify-distro.sh
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          cat << 'EOF' > Binaries/OpenCorePkg-cyclonedx.json
+          {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "version": 1,
+            "metadata": {
+              "component": {
+                "name": "AegisBoot",
+                "type": "application",
+                "description": "Continuous Integration Downstream Distribution of OpenCorePkg"
+              }
+            }
+          }
+          EOF
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e8ad94076da634d94 # v2.0.4
+        with:
+          files: |
+            Binaries/*.zip
+            Binaries/distro-version.json
+            Binaries/SHA256SUMS.txt
+            Binaries/SHA512SUMS.txt
+            Binaries/OpenCorePkg-cyclonedx.json
+          draft: false
+          prerelease: false
+          generate_release_notes: true

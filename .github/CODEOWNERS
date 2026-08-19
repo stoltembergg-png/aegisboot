@@ -1,0 +1,29 @@
+# AegisBoot Code Ownership Definition
+# Lines starting with '#' are comments.
+
+# Default maintainer for entire repository
+* @GabrielStoltemberg
+
+# CI/CD Workflows and GitHub configurations
+/.github/workflows/ @GabrielStoltemberg
+/.github/ISSUE_TEMPLATE/ @GabrielStoltemberg
+/.github/pull_request_template.md @GabrielStoltemberg
+/.github/labels.yml @GabrielStoltemberg
+
+# Automation scripts, tools, and testing suites
+/scripts/ @GabrielStoltemberg
+/tests/ @GabrielStoltemberg
+/toolchains/ @GabrielStoltemberg
+/Dockerfiles/ @GabrielStoltemberg
+
+# Governance, branding, and policy documentation
+/DISTRIBUTION.md @GabrielStoltemberg
+/BRANDING.md @GabrielStoltemberg
+/CONTRIBUTING.md @GabrielStoltemberg
+/SECURITY.md @GabrielStoltemberg
+/GOVERNANCE.md @GabrielStoltemberg
+/CHANGELOG_DISTRO.md @GabrielStoltemberg
+/docs/ @GabrielStoltemberg
+
+# Local patch stack
+/Patches/ @GabrielStoltemberg

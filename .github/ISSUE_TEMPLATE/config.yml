@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Acidanthera Discussion Forums
+    url: https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/FORUMS.md
+    about: Please use official forums (InsanelyMac, AppleLife, Dortania) for macOS installation and hardware configuration help.
+  - name: Report Security Vulnerability
+    url: https://github.com/aegisboot/aegisboot/security/advisories/new
+    about: Confidentially report security vulnerabilities in AegisBoot automation or packaging.

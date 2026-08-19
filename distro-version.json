@@ -1,0 +1,111 @@
+{
+  "$schema": "https://aegisboot.dev/schema/distro-version.v1.json",
+  "distribution": {
+    "name": "AegisBoot",
+    "description": "Continuous Integration Downstream Distribution of OpenCorePkg",
+    "version": "v1.0.8-aegis.1+170b538",
+    "distro_revision": 1,
+    "channel": "stable",
+    "build_timestamp": "2026-08-19T07:57:34.343975+00:00"
+  },
+  "upstream": {
+    "repository": "https://github.com/acidanthera/OpenCorePkg.git",
+    "branch": "master",
+    "version": "1.0.8",
+    "commit_sha": "170b538b1e998d015fad5310040b24c28b93549e",
+    "commit_sha_short": "170b538",
+    "commit_date": "2026-08-16T12:24:53+03:00"
+  },
+  "toolchain_pins": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "toolchain_version": "1.0.0",
+    "description": "Pinned toolchain versions and hashes for reproducible AegisBoot builds",
+    "base_dependencies": {
+      "edk2_release": "edk2-stable202511",
+      "ocbuild_repo": "https://github.com/acidanthera/ocbuild.git",
+      "ocbuild_commit": "master"
+    },
+    "compilers": {
+      "llvm_clang": {
+        "version": "21.0.0",
+        "target_triplets": [
+          "x86_64-pc-win32-coff",
+          "i686-pc-win32-coff",
+          "aarch64-linux-gnu"
+        ]
+      },
+      "gcc": {
+        "version": "13.2.0",
+        "packages": [
+          "gcc-multilib",
+          "gcc-x86-64-linux-gnu",
+          "i686-w64-mingw32-gcc"
+        ]
+      },
+      "xcode": {
+        "min_version": "15.0",
+        "recommended": "16.0"
+      }
+    },
+    "assemblers_and_compilers": {
+      "nasm": {
+        "version": "2.16.03",
+        "sha256": "55c4794eab3d82a17cb6eecdd18f8da0fa7270e5b72186835a09ee4f23b2c286"
+      },
+      "iasl": {
+        "version": "20240827",
+        "sha256": "4b68ff5e13d9cf8b1a8d05cf4e8a4a35ec11b5e3240e87b7a1496a79e4ea095c"
+      }
+    },
+    "runtime_and_linters": {
+      "python": ">=3.10",
+      "uncrustify": "0.72.0",
+      "shellcheck": "0.10.0",
+      "prospector": "1.10.3",
+      "qemu": ">=8.2.0",
+      "ovmf": "2024.02"
+    },
+    "actions_pins": {
+      "actions/checkout": "b4ffde65f46336ab88eb53be808477a3936bae11",
+      "actions/upload-artifact": "65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08",
+      "actions/download-artifact": "fa0a91b85d4f404e444e00e005971372dc801d16",
+      "actions/setup-python": "0a5c61591373683505ea898e09a3ea4f39ef2b9c",
+      "github/codeql-action": "48ab28a6f5dab2a823e7e690421c822b0f86386b"
+    }
+  },
+  "patch_stack": {
+    "count": 5,
+    "patches": [
+      {
+        "name": "0001-MdeModulePkg-SataControllerDxe-Add-support-for-drive.patch",
+        "path": "Patches/0001-MdeModulePkg-SataControllerDxe-Add-support-for-drive.patch",
+        "size_bytes": 1601,
+        "upstream_status": "pending"
+      },
+      {
+        "name": "0002-MdeModulePkg-AtaAtapiPassThru-Add-support-for-drives.patch",
+        "path": "Patches/0002-MdeModulePkg-AtaAtapiPassThru-Add-support-for-drives.patch",
+        "size_bytes": 1681,
+        "upstream_status": "pending"
+      },
+      {
+        "name": "0003-MdeModulePkg-AtaAtapiPassThru-Reduce-timeout.patch",
+        "path": "Patches/0003-MdeModulePkg-AtaAtapiPassThru-Reduce-timeout.patch",
+        "size_bytes": 1003,
+        "upstream_status": "pending"
+      },
+      {
+        "name": "0005-ShellPkg-Devices-shell-command-support-misaligned-de.patch",
+        "path": "Patches/0005-ShellPkg-Devices-shell-command-support-misaligned-de.patch",
+        "size_bytes": 2022,
+        "upstream_status": "pending"
+      },
+      {
+        "name": "0007-ShellPkg-Allow-DEBUG-shell-to-start-with-too-many-fi.patch",
+        "path": "Patches/0007-ShellPkg-Allow-DEBUG-shell-to-start-with-too-many-fi.patch",
+        "size_bytes": 1060,
+        "upstream_status": "pending"
+      }
+    ]
+  }
+}

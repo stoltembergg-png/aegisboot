@@ -2,10 +2,23 @@ name: Analyze
 
 on:
   push:
+    branches:
+      - master
+      - main
   pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
   release:
     types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: analyze-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   PROJECT_TYPE: UEFI
@@ -14,13 +27,16 @@ jobs:
   analyze-shell-scripts:
     name: Shell Scripts
     runs-on: macos-latest
+    timeout-minutes: 30
     env:
       JOB_TYPE: ANALYZE
       HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
-      # Due to brew adopting PEP 668 https://github.com/orgs/Homebrew/discussions/3404 pip installs should be in a Python venv
       - name: Install Dependencies
         run: |
           brew install shellcheck
@@ -65,10 +81,14 @@ jobs:
   analyze-python-scripts:
     name: Python Scripts
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     env:
       JOB_TYPE: ANALYZE
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
       - name: Install Dependencies
         run: |
@@ -80,18 +100,23 @@ jobs:
           python3 -m prospector . -P ./profile.yml | tee prospector_result.txt || exit 1
 
       - name: Upload prospector result to Artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         if: failure()
         with:
           name: Prospector Artifacts
           path: ./prospector_result.txt
+          retention-days: 7
 
   analyze-docs-linux:
     name: Documentation
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     if: github.repository_owner == 'acidanthera' && github.ref_name == 'master'
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
       - name: Install Dependencies
         run: |
@@ -104,12 +129,16 @@ jobs:
   analyze-coverity:
     name: Coverity
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     env:
       JOB_TYPE: COVERITY
       TOOLCHAINS: GCC
     if: github.repository_owner == 'acidanthera' && github.event_name != 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
       - name: Install Dependencies
         run: |

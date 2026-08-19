@@ -1,0 +1,61 @@
+name: Bug Report (Distro / CI / Build)
+description: Report a bug in AegisBoot CI/CD, build tools, scripts, or packaging.
+title: "[BUG]: "
+labels: ["type:bug", "status:needs-manual-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for reporting an issue!
+        Please note: This issue tracker is strictly for **AegisBoot downstream distribution, CI/CD, scripts, and build infrastructure**.
+        For general Hackintosh support or core OpenCore configuration help, please visit the [Acidanthera Forums](/Docs/FORUMS.md).
+
+  - type: input
+    id: version
+    attributes:
+      label: AegisBoot Distribution Version
+      description: What version or commit of AegisBoot are you running? (e.g., v1.0.8-aegis.1+170b538)
+      placeholder: v1.0.8-aegis.1+170b538
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Operating System / Build Environment
+      options:
+        - Ubuntu 24.04 / Linux Native
+        - Docker (Docker Compose)
+        - macOS (Xcode)
+        - Windows 11 (VS2022 / MinGW)
+        - Windows 11 (WSL2)
+        - Other (explain below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Bug
+      description: A clear and concise description of what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can maintainers reproduce this issue?
+      placeholder: |
+        1. Run './scripts/build-distro.sh --target DEBUG'
+        2. Inspect output in Binaries/
+        3. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please paste any relevant build or CI logs.
+      render: shell

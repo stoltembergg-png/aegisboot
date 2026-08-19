@@ -2,10 +2,23 @@ name: Uncrustify
 
 on:
   push:
+    branches:
+      - master
+      - main
   pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
   release:
     types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uncrustify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   PROJECT_TYPE: UEFI
@@ -14,8 +27,12 @@ jobs:
   analyze-uncrustify:
     name: Check Codestyle
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
       - name: Install Dependencies
         run: |
@@ -32,8 +49,9 @@ jobs:
           python3 -c "$(/usr/bin/curl https://raw.githubusercontent.com/acidanthera/ocbuild/master/uncstrap/uncstrap.py)" ./Uncrustify.yml || exit 1
 
       - name: Upload to Artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         if: failure()
         with:
           name: Uncrustify Artifacts
           path: ./uncrustify.diff
+          retention-days: 7
