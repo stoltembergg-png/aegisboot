@@ -36,10 +36,14 @@ jobs:
           UPSTREAM_SHORT=$(git rev-parse --short upstream/master)
           UPSTREAM_DATE=$(git log -1 --format=%cI upstream/master)
 
+          # Calculate behind count
+          BEHIND_COUNT=$(git rev-list --count HEAD..upstream/master 2>/dev/null || echo "0")
+
           echo "local_sha=$LOCAL_SHA" >> "$GITHUB_OUTPUT"
           echo "upstream_sha=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
           echo "upstream_short=$UPSTREAM_SHORT" >> "$GITHUB_OUTPUT"
           echo "upstream_date=$UPSTREAM_DATE" >> "$GITHUB_OUTPUT"
+          echo "behind_count=$BEHIND_COUNT" >> "$GITHUB_OUTPUT"
 
           if [ "$LOCAL_SHA" = "$UPSTREAM_SHA" ]; then
             echo "has_changes=0" >> "$GITHUB_OUTPUT"
@@ -47,6 +51,7 @@ jobs:
           else
             echo "has_changes=1" >> "$GITHUB_OUTPUT"
             echo "New upstream commits detected: $UPSTREAM_SHORT"
+            echo "Upstream is ahead by $BEHIND_COUNT commit(s)."
           fi
 
       - name: Verify Patch Stack Against Upstream
@@ -61,6 +66,7 @@ jobs:
           UPSTREAM_SHA: ${{ steps.check_upstream.outputs.upstream_sha }}
           UPSTREAM_SHORT: ${{ steps.check_upstream.outputs.upstream_short }}
           UPSTREAM_DATE: ${{ steps.check_upstream.outputs.upstream_date }}
+          BEHIND_COUNT: ${{ steps.check_upstream.outputs.behind_count }}
         run: |
           SYNC_BRANCH="sync/upstream-${UPSTREAM_SHORT}"
           git checkout -B "$SYNC_BRANCH" upstream/master
@@ -72,11 +78,18 @@ jobs:
           - **Upstream SHA:** [${UPSTREAM_SHA}](https://github.com/acidanthera/OpenCorePkg/commit/${UPSTREAM_SHA})
           - **Upstream Date:** \`${UPSTREAM_DATE}\`
           - **Sync Branch:** \`${SYNC_BRANCH}\`
+          - **Upstream Ahead By:** ${BEHIND_COUNT} commit(s)
 
           #### Validation Checklist
           - [x] Local patch stack checked (\`scripts/apply-patches.sh --check\`)
           - [ ] CI validation matrix pass
           - [ ] QEMU/OVMF boot regression test pass
+          - [ ] Behind count within acceptable window (< 10 commits)
+
+          #### SHA Tracking
+          - **Upstream Base SHA (fork before sync):** \`${{ github.sha }}\`
+          - **Upstream Head SHA (upstream merged):** \`${UPSTREAM_SHA}\`
+          - **Fork Head SHA (after merge):** _to be recorded after merge_
           EOF
           )
 
@@ -93,4 +106,15 @@ jobs:
               --label "sync:upstream,impact:minor"
           else
             echo "Sync PR already exists for ${SYNC_BRANCH}."
+          fi
+
+      - name: Alert if Behind Count Exceeds Threshold
+        if: steps.check_upstream.outputs.has_changes == '1' && steps.check_upstream.outputs.behind_count != '0'
+        run: |
+          BEHIND=${{ steps.check_upstream.outputs.behind_count }}
+          if [ "$BEHIND" -gt 10 ]; then
+            echo "::warning title=Sync Behind Threshold::Fork is behind upstream by $BEHIND commits (threshold: 10)"
+            echo "Behind count $BEHIND exceeds acceptable window of 10 commits."
+          elif [ "$BEHIND" -gt 0 ]; then
+            echo "Fork is behind upstream by $BEHIND commit(s). Within acceptable window."
           fi
