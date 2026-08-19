@@ -34,11 +34,42 @@ class TestImpactClassifier(unittest.TestCase):
         return "unknown"
 
     def test_infrastructure_changes(self):
-        """Test that .github/ changes are classified as infrastructure."""
-        # This test uses the actual repo state
-        impact = self.run_classifier("HEAD~1", "HEAD")
-        # Last commit was sync-upstream.sh (scripts/) -> infrastructure
-        self.assertEqual(impact, "infrastructure")
+        """Test that .github/ changes are classified as infrastructure.
+        
+        Find a commit that actually has .github/ or scripts/ changes.
+        """
+        # Find a commit with .github/ changes by looking at recent history
+        result = subprocess.run(
+            ["git", "log", "--oneline", "-20", "--name-only", "--", ".github/"],
+            cwd=self.repo_root,
+            capture_output=True,
+            text=True,
+        )
+        
+        if result.returncode == 0 and result.stdout.strip():
+            lines = result.stdout.strip().split('\n')
+            # First line is the commit hash
+            commit_hash = lines[0].split()[0]
+            # Test classification of that commit
+            impact = self.run_classifier(f"{commit_hash}~1", commit_hash)
+            self.assertEqual(impact, "infrastructure", 
+                f"Expected infrastructure for commit {commit_hash}, got {impact}")
+        else:
+            # Fallback: test with a known infrastructure commit from earlier
+            # The sync.yml commit should have .github/ changes
+            result = subprocess.run(
+                ["git", "log", "--oneline", "-1", "--", ".github/workflows/sync.yml"],
+                cwd=self.repo_root,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                commit_hash = result.stdout.strip().split()[0]
+                impact = self.run_classifier(f"{commit_hash}~1", commit_hash)
+                self.assertEqual(impact, "infrastructure",
+                    f"Expected infrastructure for sync.yml commit {commit_hash}, got {impact}")
+            else:
+                self.skipTest("No .github/ commits found in history")
 
     def test_classifier_runs_without_error(self):
         """Test that classifier runs without error for any valid refs."""
