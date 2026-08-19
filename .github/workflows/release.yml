@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write  # Required for SLSA provenance signing
 
 concurrency:
   group: release-${{ github.ref }}
@@ -67,6 +68,21 @@ jobs:
         run: |
           python3 scripts/validate_sbom.py --sbom Binaries/OpenCorePkg-cyclonedx.json
 
+      - name: Generate SLSA Provenance
+        id: provenance
+        run: |
+          TAG="${{ github.ref_name }}"
+          UPSTREAM_VERSION=$(grep -oP '#define\s+OPEN_CORE_VERSION\s+"\K[^"]+' Include/Acidanthera/Library/OcMainLib.h 2>/dev/null || echo "1.0.8")
+          REV=$(echo "$TAG" | sed -E 's/.*-aegis\.([0-9]+)\+.*/\1/')
+          
+          python3 scripts/generate-provenance.py \
+            --tag "$TAG" \
+            --upstream-version "$UPSTREAM_VERSION" \
+            --revision "$REV" \
+            --output Binaries/provenance.json
+          
+          echo "provenance=Binaries/provenance.json" >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e8ad94076da634d94 # v2.0.4
         with:
@@ -76,6 +92,7 @@ jobs:
             Binaries/SHA256SUMS.txt
             Binaries/SHA512SUMS.txt
             Binaries/OpenCorePkg-cyclonedx.json
+            Binaries/provenance.json
           draft: false
           prerelease: false
           generate_release_notes: true
