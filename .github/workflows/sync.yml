@@ -59,6 +59,14 @@ jobs:
         run: |
           ./scripts/apply-patches.sh --check
 
+      - name: Classify Impact of Upstream Changes
+        if: steps.check_upstream.outputs.has_changes == '1'
+        id: classify
+        run: |
+          IMPACT=$(python scripts/classify-impact.py --base HEAD --head upstream/master)
+          echo "impact=$IMPACT" >> "$GITHUB_OUTPUT"
+          echo "Detected impact: $IMPACT"
+
       - name: Create or Update Sync Branch and PR
         if: steps.check_upstream.outputs.has_changes == '1'
         env:
@@ -67,6 +75,7 @@ jobs:
           UPSTREAM_SHORT: ${{ steps.check_upstream.outputs.upstream_short }}
           UPSTREAM_DATE: ${{ steps.check_upstream.outputs.upstream_date }}
           BEHIND_COUNT: ${{ steps.check_upstream.outputs.behind_count }}
+          IMPACT_LABEL: ${{ steps.classify.outputs.impact }}
         run: |
           SYNC_BRANCH="sync/upstream-${UPSTREAM_SHORT}"
           git checkout -B "$SYNC_BRANCH" upstream/master
@@ -79,6 +88,7 @@ jobs:
           - **Upstream Date:** \`${UPSTREAM_DATE}\`
           - **Sync Branch:** \`${SYNC_BRANCH}\`
           - **Upstream Ahead By:** ${BEHIND_COUNT} commit(s)
+          - **Impact Classification:** \`${IMPACT_LABEL}\`
 
           #### Validation Checklist
           - [x] Local patch stack checked (\`scripts/apply-patches.sh --check\`)
@@ -103,7 +113,7 @@ jobs:
               --head "$SYNC_BRANCH" \
               --title "$PR_TITLE" \
               --body "$PR_BODY" \
-              --label "sync:upstream,impact:minor"
+              --label "sync:upstream,impact:${IMPACT_LABEL}"
           else
             echo "Sync PR already exists for ${SYNC_BRANCH}."
           fi
