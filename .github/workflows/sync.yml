@@ -25,6 +25,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Configure Upstream Remote
+        run: |
+          git remote add upstream https://github.com/acidanthera/OpenCorePkg.git
+          git remote set-url upstream https://github.com/acidanthera/OpenCorePkg.git
+          git remote add fork https://github.com/stoltembergg-png/aegisboot.git
+          git remote set-url fork https://github.com/stoltembergg-png/aegisboot.git
+
       - name: Check for New Upstream Commits
         id: check_upstream
         run: |
@@ -57,7 +64,7 @@ jobs:
       - name: Verify Patch Stack Against Upstream
         if: steps.check_upstream.outputs.has_changes == '1'
         run: |
-          ./scripts/apply-patches.sh --check
+          bash scripts/apply-patches.sh --check
 
       - name: Classify Impact of Upstream Changes
         if: steps.check_upstream.outputs.has_changes == '1'

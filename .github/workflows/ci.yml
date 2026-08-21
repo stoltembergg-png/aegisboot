@@ -144,7 +144,7 @@ jobs:
           persist-credentials: false
 
       - name: Check Patch Clean Applicability
-        run: ./scripts/apply-patches.sh --check
+        run: bash scripts/apply-patches.sh --check
 
   policy-and-metadata-tests:
     name: Policy & Version Metadata Tests

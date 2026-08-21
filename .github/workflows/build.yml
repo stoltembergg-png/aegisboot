@@ -255,7 +255,7 @@ jobs:
 
       - name: Execute Dual-Pass Build Comparison
         run: |
-          FAST_DRIFT_CHECK=1 ./scripts/check-build-drift.sh
+          FAST_DRIFT_CHECK=1 bash scripts/check-build-drift.sh
 
       - name: Upload Drift Report
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0

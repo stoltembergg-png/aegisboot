@@ -51,7 +51,7 @@ jobs:
 
       - name: Generate Checksums (SHA256 & SHA512)
         run: |
-          ./scripts/verify-distro.sh
+          bash scripts/verify-distro.sh
 
       - name: Install syft for SBOM generation
         run: |
