@@ -161,10 +161,16 @@ def main():
     parser.add_argument("--base", required=True, help="Base commit/branch (e.g., origin/master)")
     parser.add_argument("--head", required=True, help="Head commit/branch (e.g., sync/upstream-xxx)")
     parser.add_argument("--output", help="Output file for impact label")
+    parser.add_argument("--quiet", action="store_true", help="Only output the impact value (for CI)")
     args = parser.parse_args()
 
     impact = classify_impact(args.base, args.head)
-    print(f"\n=== Impact Classification: {impact} ===")
+
+    if args.quiet:
+        # Only output the impact value for CI consumption
+        print(impact)
+    else:
+        print(f"\n=== Impact Classification: {impact} ===")
 
     if args.output:
         with open(args.output, "w") as f:

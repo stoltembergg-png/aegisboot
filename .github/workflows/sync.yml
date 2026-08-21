@@ -70,7 +70,7 @@ jobs:
         if: steps.check_upstream.outputs.has_changes == '1'
         id: classify
         run: |
-          IMPACT=$(python scripts/classify-impact.py --base HEAD --head upstream/master)
+          IMPACT=$(python scripts/classify-impact.py --base HEAD --head upstream/master --quiet)
           echo "impact=$IMPACT" >> "$GITHUB_OUTPUT"
           echo "Detected impact: $IMPACT"
 
