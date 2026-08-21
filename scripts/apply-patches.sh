@@ -44,7 +44,7 @@ cd "${ROOT_DIR}"
 for patch in "${PATCH_FILES[@]}"; do
   patch_name="$(basename "$patch")"
   # Use relative path from repo root for git apply
-  rel_patch="${patch#${ROOT_DIR}/}"
+  rel_patch="${patch#"${ROOT_DIR}"/}"
   echo -n "  Checking [${patch_name}]... "
 
   # If UDK directory exists, test live application in UDK tree

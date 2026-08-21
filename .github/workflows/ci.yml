@@ -42,8 +42,8 @@ jobs:
 
       - name: Run Workflow Hardening Tests
         run: |
-          python -m unittest tests/test_workflow_integrity.py
-          python -m unittest tests/test_validator_unit.py
+          python -m unittest Tests/test_workflow_integrity.py
+          python -m unittest Tests/test_validator_unit.py
 
   formatting:
     name: Code & Script Formatting
@@ -61,7 +61,7 @@ jobs:
           python-version: "3.12"
 
       - name: Verify Python Script Syntax
-        run: python -m py_compile scripts/*.py tests/*.py
+        run: python -m py_compile scripts/*.py Tests/*.py
 
       - name: Check Shell Script Syntax
         run: |
@@ -163,9 +163,9 @@ jobs:
 
       - name: Run Policy and Metadata Test Suites
         run: |
-          python -m unittest tests/test_distribution_policies.py
-          python -m unittest tests/test_version_metadata.py
-          python -m unittest tests/test_patch_stack.py
+          python -m unittest Tests/test_distribution_policies.py
+          python -m unittest Tests/test_version_metadata.py
+          python -m unittest Tests/test_patch_stack.py
 
   unit-and-integration-tests:
     name: Utilities Unit & Integration Tests
@@ -213,4 +213,4 @@ jobs:
           python-version: "3.12"
 
       - name: Run QEMU OVMF Simulation Test
-        run: python tests/test_qemu_boot.py
+        run: python Tests/test_qemu_boot.py
