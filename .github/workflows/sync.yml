@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  workflows: write
 
 concurrency:
   group: sync-upstream
@@ -87,33 +86,38 @@ jobs:
         run: |
           SYNC_BRANCH="sync/upstream-${UPSTREAM_SHORT}"
           git checkout -B "$SYNC_BRANCH" upstream/master
-
+          
+          # Remove workflow files to avoid needing workflows:write permission
+          rm -f .github/workflows/*.yml
+          git add .github/workflows/*.yml || true
+          git commit -m "chore: remove workflow files for sync (no workflows:write permission)" || true
+          
           PR_TITLE="sync(upstream): merge upstream ${UPSTREAM_SHORT} (${UPSTREAM_DATE})"
           PR_BODY=$(cat << EOF
           ### Automated Upstream Synchronization
-
+          
           - **Upstream SHA:** [${UPSTREAM_SHA}](https://github.com/acidanthera/OpenCorePkg/commit/${UPSTREAM_SHA})
           - **Upstream Date:** \`${UPSTREAM_DATE}\`
           - **Sync Branch:** \`${SYNC_BRANCH}\`
           - **Upstream Ahead By:** ${BEHIND_COUNT} commit(s)
           - **Impact Classification:** \`${IMPACT_LABEL}\`
-
+          
           #### Validation Checklist
           - [x] Local patch stack checked (\`scripts/apply-patches.sh --check\`)
           - [ ] CI validation matrix pass
           - [ ] QEMU/OVMF boot regression test pass
           - [ ] Behind count within acceptable window (< 10 commits)
-
+          
           #### SHA Tracking
           - **Upstream Base SHA (fork before sync):** \`${{ github.sha }}\`
           - **Upstream Head SHA (upstream merged):** \`${UPSTREAM_SHA}\`
           - **Fork Head SHA (after merge):** _to be recorded after merge_
           EOF
           )
-
+          
           # Push branch to fork remote (our fork, not upstream)
           git push fork "$SYNC_BRANCH" --force
-
+          
           # Create PR if not already open
           if ! gh pr list --head "$SYNC_BRANCH" --json number | grep -q 'number'; then
             gh pr create \
