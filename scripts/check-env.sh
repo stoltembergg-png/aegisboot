@@ -17,7 +17,7 @@ WARNINGS=0
 check_cmd() {
   local cmd="$1"
   local required="$2"
-  local min_ver="${3:-}"
+  local _min_ver="${3:-}"
 
   if command -v "$cmd" >/dev/null 2>&1; then
     local path
