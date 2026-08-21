@@ -42,8 +42,8 @@ class TestDistributionPolicies(unittest.TestCase):
             "versioning.md",
         ]
         for doc in docs_policies:
-            doc_path = self.repo_root / "docs" / doc
-            self.assertTrue(doc_path.exists(), f"Required policy in docs/ missing: {doc}")
+            doc_path = self.repo_root / "Docs" / doc
+            self.assertTrue(doc_path.exists(), f"Required policy in Docs/ missing: {doc}")
 
     def test_branding_disclaimer_present(self):
         branding = (self.repo_root / "BRANDING.md").read_text(encoding="utf-8")
