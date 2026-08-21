@@ -10,6 +10,7 @@ import argparse
 import re
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 
@@ -62,13 +63,13 @@ INFRASTRUCTURE_PATHS = [
     r"\.github/.*",
     r"scripts/.*",
     r"toolchains/.*",
-    r"tests/.*",
+    r"Tests/.*",
     r"Dockerfiles/.*",
     r"docker-compose\.ya?ml",
     r"docker-apparmor\.sh",
     r"build_.*\.tool",
     r"Uncrustify\.yml",
-    r"docs/.*",
+    r"Docs/.*",
     r"CHANGELOG.*\.md",
 ]
 
@@ -120,7 +121,6 @@ def classify_file(filepath: str) -> str:
     # Major changes (new drivers, platforms, breaking API changes)
     for pattern in MAJOR_PATHS:
         if re.search(pattern, filepath, re.IGNORECASE):
-            # Check if it's a new file (addition) vs modification
             return "minor"  # Default to minor for code changes
 
     return "patch"
@@ -141,7 +141,6 @@ def classify_impact(base: str, head: str) -> str:
             continue
         impact = classify_file(f)
         impacts.append(impact)
-        print(f"  {f} -> {impact}")
 
     # Priority order: critical > major > minor > patch > infrastructure > none
     priority = {
@@ -172,8 +171,14 @@ def main():
             f.write(impact)
         print(f"Impact written to {args.output}")
 
-    # Output for GitHub Actions
-    print(f"::set-output name=impact::{impact}")
+    # Output for GitHub Actions using environment files (modern approach)
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a") as f:
+            f.write(f"impact={impact}\n")
+    else:
+        # Fallback for older runners (deprecated)
+        print(f"::set-output name=impact::{impact}")
 
     sys.exit(0)
 
