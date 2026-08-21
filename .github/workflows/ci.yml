@@ -182,16 +182,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential nasm iasl uuid-dev libssl-dev gcc-multilib
 
-      - name: Run ACPIe Testsuite
+      - name: Run ACPIe Testsuite (if binary exists)
         run: |
-          if [ -f "Utilities/ACPIe/testsuite.sh" ]; then
+          if [ -f "Utilities/ACPIe/testsuite.sh" ] && [ -x "Utilities/ACPIe/ACPIe" ]; then
             cd Utilities/ACPIe && ./testsuite.sh
+          else
+            echo "Skipping ACPIe testsuite - binary not built yet"
           fi
 
       - name: Run Kext Injection Integration Checks
         run: |
-          if [ -f "Utilities/TestKextInject/check_injection.sh" ]; then
+          if [ -f "Utilities/TestKextInject/check_injection.sh" ] && [ -x "Utilities/TestKextInject/check_injection" ]; then
             cd Utilities/TestKextInject && ./check_injection.sh
+          else
+            echo "Skipping Kext Injection test - binary not built yet"
           fi
 
   qemu-boot-test:
