@@ -33,11 +33,21 @@ if [ -n "${OCVALIDATE_BIN}" ]; then
   echo "Found ocvalidate: ${OCVALIDATE_BIN}"
   if [ -f "Docs/Sample.plist" ]; then
     echo -n "  Validating Docs/Sample.plist... "
-    "${OCVALIDATE_BIN}" Docs/Sample.plist >/dev/null && echo "OK" || { echo "FAILED"; exit 1; }
+    if "${OCVALIDATE_BIN}" Docs/Sample.plist >/dev/null; then
+      echo "OK"
+    else
+      echo "FAILED"
+      exit 1
+    fi
   fi
   if [ -f "Docs/SampleCustom.plist" ]; then
     echo -n "  Validating Docs/SampleCustom.plist... "
-    "${OCVALIDATE_BIN}" Docs/SampleCustom.plist >/dev/null && echo "OK" || { echo "FAILED"; exit 1; }
+    if "${OCVALIDATE_BIN}" Docs/SampleCustom.plist >/dev/null; then
+      echo "OK"
+    else
+      echo "FAILED"
+      exit 1
+    fi
   fi
 else
   echo "ocvalidate not found in tree yet. Skipping plist schema validation."
@@ -51,20 +61,20 @@ shopt -u nullglob
 if [ ${#ZIP_FILES[@]} -gt 0 ]; then
   echo "Generating cryptographic checksums for ${#ZIP_FILES[@]} binary package(s)..."
   cd "${BIN_DIR}"
-  
+
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum *.zip > SHA256SUMS.txt
+    sha256sum ./*.zip > SHA256SUMS.txt
     echo "  [OK] Generated SHA256SUMS.txt"
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 *.zip > SHA256SUMS.txt
+    shasum -a 256 ./*.zip > SHA256SUMS.txt
     echo "  [OK] Generated SHA256SUMS.txt"
   fi
 
   if command -v sha512sum >/dev/null 2>&1; then
-    sha512sum *.zip > SHA512SUMS.txt
+    sha512sum ./*.zip > SHA512SUMS.txt
     echo "  [OK] Generated SHA512SUMS.txt"
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 512 *.zip > SHA512SUMS.txt
+    shasum -a 512 ./*.zip > SHA512SUMS.txt
     echo "  [OK] Generated SHA512SUMS.txt"
   fi
   cd "${ROOT_DIR}"
