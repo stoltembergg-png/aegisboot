@@ -23,13 +23,15 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Configure Git Credentials
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote add fork https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/stoltembergg-png/aegisboot.git
+          git remote add fork "https://x-access-token:${GITHUB_TOKEN}@github.com/stoltembergg-png/aegisboot.git"
           git remote add upstream https://github.com/acidanthera/OpenCorePkg.git
 
       - name: Check for New Upstream Commits
