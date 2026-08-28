@@ -89,11 +89,6 @@ jobs:
           SYNC_BRANCH="sync/upstream-${UPSTREAM_SHORT}"
           git checkout -B "$SYNC_BRANCH" upstream/master
           
-          # Remove workflow files to avoid needing workflows:write permission
-          rm -f .github/workflows/*.yml
-          git add .github/workflows/*.yml || true
-          git commit -m "chore: remove workflow files for sync (no workflows:write permission)" || true
-          
           PR_TITLE="sync(upstream): merge upstream ${UPSTREAM_SHORT} (${UPSTREAM_DATE})"
           PR_BODY=$(cat << EOF
           ### Automated Upstream Synchronization
