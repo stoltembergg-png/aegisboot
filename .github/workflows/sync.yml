@@ -27,11 +27,11 @@ jobs:
 
       - name: Configure Git Credentials
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SYNC_PAT: ${{ secrets.SYNC_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote add fork "https://x-access-token:${GITHUB_TOKEN}@github.com/stoltembergg-png/aegisboot.git"
+          git remote add fork "https://x-access-token:${SYNC_PAT}@github.com/stoltembergg-png/aegisboot.git"
           git remote add upstream https://github.com/acidanthera/OpenCorePkg.git
 
       - name: Check for New Upstream Commits
