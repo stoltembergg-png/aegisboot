@@ -45,21 +45,29 @@ def parse_labels_yaml(yaml_path: Path) -> list:
 
 
 def get_repo_name(repo_root: Path) -> str:
-    try:
-        remote = subprocess.check_output(
-            ["git", "remote", "get-url", "origin"],
-            cwd=repo_root,
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        # Parse owner/repo from https://github.com/owner/repo.git or git@github.com:owner/repo.git
-        if "github.com" in remote:
-            parts = remote.split("github.com")[-1].lstrip("/").lstrip(":")
-            if parts.endswith(".git"):
-                parts = parts[:-4]
-            return parts
-    except Exception:
-        pass
+    # Prefer the 'fork' remote (our fork); fall back to 'origin'
+    for remote_name in ("fork", "origin"):
+        try:
+            rc = subprocess.run(
+                ["git", "remote", "get-url", remote_name],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            if rc.returncode != 0:
+                continue
+            url = rc.stdout.strip()
+            if "github.com" in url:
+                tail = url.split("github.com")[-1]
+                if tail.startswith(":"):
+                    tail = tail[1:]
+                tail = tail.strip("/")
+                if tail.endswith(".git"):
+                    tail = tail[:-4]
+                return tail
+        except Exception:
+            continue
     return "stoltembergg-png/aegisboot"
 
 
