@@ -121,8 +121,9 @@ jobs:
           git push fork "$SYNC_BRANCH" --force
           
           # Create PR if not already open
-          if ! gh pr list --head "$SYNC_BRANCH" --json number | grep -q 'number'; then
+          if ! gh pr list --repo stoltembergg-png/aegisboot --head "$SYNC_BRANCH" --json number | grep -q 'number'; then
             gh pr create \
+              --repo stoltembergg-png/aegisboot \
               --base master \
               --head "$SYNC_BRANCH" \
               --title "$PR_TITLE" \
