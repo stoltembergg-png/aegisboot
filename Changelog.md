@@ -5,6 +5,9 @@ OpenCore Changelog
 - Added launch helper for macrecovery utility on Windows, thx @aayushprsingh
 - Added option to hide verbose output from any driver, thx @ilikesn0w
 - Re-enable Secure Boot after DMG loading, thx @albert-mueller
+- Fix uninitialized L3 cache value on CPUs without L3 cache, thx @bugprogrammer
+- Add grub4dos detection to OpenLegacyBoot, thx @bugprogrammer
+- Add OpticalDrive icon to OpenCanopy, thx @ilikesn0w
 
 #### v1.0.7
 - Improved `XhciPortLimit` compatibility with macOS Tahoe, thx @laobamac
